@@ -40,7 +40,9 @@
 #include <std_srvs/Empty.h>
 #include <naoqi_msgs/SetTransform.h>
 
+#include <tf/transform_listener.h>
 #include <tf/transform_broadcaster.h>
+
 #include <tf/transform_datatypes.h>
 
 // Aldebaran includes
@@ -112,6 +114,8 @@ protected:
 
     ros::Publisher m_odomPub;
     tf::TransformBroadcaster m_transformBroadcaster;
+    tf::TransformListener m_transformListener;
+
     ros::Publisher m_torsoIMUPub;
     ros::Publisher m_jointStatePub;
 
@@ -197,11 +201,13 @@ NaoqiJointStates::NaoqiJointStates(int argc, char ** argv)
     m_privateNh.param("odom_frame_id", m_odomFrameId, m_odomFrameId);
     m_privateNh.param("use_imu_angles", m_useIMUAngles, m_useIMUAngles);
 
+    m_baseFrameId = m_transformListener.resolve(m_baseFrameId);
+    m_odomFrameId = m_transformListener.resolve(m_odomFrameId);
+
     m_pauseOdomSrv = m_nh.advertiseService("pause_odometry", &NaoqiJointStates::pauseOdomCallback, this);
     m_resumeOdomSrv = m_nh.advertiseService("resume_odometry", &NaoqiJointStates::resumeOdomCallback, this);
     m_odomOffsetSrv = m_nh.advertiseService("odometry_offset", &NaoqiJointStates::odomOffsetCallback, this);
     m_setOdomPoseSrv = m_nh.advertiseService("set_odometry_pose", &NaoqiJointStates::setOdomPoseCallback, this);
-
 
     m_odom.header.frame_id = m_odomFrameId;
     m_torsoIMU.header.frame_id = m_baseFrameId;
